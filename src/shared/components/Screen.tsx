@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAppTheme } from '@/shared/theme';
+import { useAppTheme, useResponsive } from '@/shared/theme';
 
 type ScreenProps = {
   children: ReactNode;
@@ -10,6 +10,7 @@ type ScreenProps = {
 
 export function Screen({ children }: ScreenProps) {
   const theme = useAppTheme();
+  const responsive = useResponsive();
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
@@ -17,9 +18,10 @@ export function Screen({ children }: ScreenProps) {
         style={[
           styles.content,
           {
-            paddingHorizontal: theme.spacing.xl,
-            paddingTop: theme.spacing.xxl,
-            gap: theme.spacing.xl,
+            maxWidth: responsive.contentMaxWidth,
+            paddingHorizontal: responsive.horizontalPadding,
+            paddingTop: responsive.isCompact ? theme.spacing.xxl : theme.spacing.xxxl,
+            gap: responsive.sectionGap,
           },
         ]}
       >
@@ -36,7 +38,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     width: '100%',
-    maxWidth: 480,
     alignSelf: 'center',
   },
 });

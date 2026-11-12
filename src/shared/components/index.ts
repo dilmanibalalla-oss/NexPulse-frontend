@@ -1,5 +1,9 @@
 export { BootScreen } from '@/shared/components/BootScreen';
+export { Button } from '@/shared/components/Button';
 export { Card } from '@/shared/components/Card';
+export { ErrorMessage } from '@/shared/components/ErrorMessage';
+export { LoadingIndicator } from '@/shared/components/LoadingIndicator';
 export { Screen } from '@/shared/components/Screen';
-export { StatusDot } from '@/shared/components/StatusDot';
+export { StatusBadge } from '@/shared/components/StatusBadge';
 export { Text } from '@/shared/components/Text';
+export { TextField } from '@/shared/components/TextField';

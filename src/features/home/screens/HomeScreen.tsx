@@ -1,7 +1,7 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { env } from '@/shared/config/env';
-import { Card, Screen, StatusDot, Text } from '@/shared/components';
+import { Card, Screen, StatusBadge, Text } from '@/shared/components';
 import { useAppTheme } from '@/shared/theme';
 
 export function HomeScreen() {
@@ -19,17 +19,24 @@ export function HomeScreen() {
 
       <Card>
         <Text variant="label">Status</Text>
-        <View style={{ gap: theme.spacing.md }}>
-          <StatusDot color={theme.colors.up} label="Up" />
-          <StatusDot color={theme.colors.down} label="Down" />
-          <StatusDot color={theme.colors.unknown} label="Waiting" />
+        <View style={[styles.badges, { gap: theme.spacing.sm }]}>
+          <StatusBadge status="UP" />
+          <StatusBadge status="DOWN" />
+          <StatusBadge status="UNKNOWN" />
         </View>
       </Card>
 
-      <Card>
+      <Card accent="purple">
         <Text variant="label">API origin</Text>
         <Text variant="body">{env.apiUrl}</Text>
       </Card>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  badges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+});
