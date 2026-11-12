@@ -15,13 +15,17 @@ export const useSessionStore = create<SessionState>((set) => ({
   hydrated: false,
   hydrate: async () => {
     try {
-      const token = await readAuthToken();
-      set({ token, hydrated: true });
+      const stored = await readAuthToken();
+      set({ token: stored?.trim() ? stored : null, hydrated: true });
     } catch {
       set({ token: null, hydrated: true });
     }
   },
   setToken: async (token) => {
+    if (!token.trim()) {
+      throw new Error('Cannot store an empty session token.');
+    }
+
     await saveAuthToken(token);
     set({ token });
   },

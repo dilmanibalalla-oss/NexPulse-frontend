@@ -1,4 +1,4 @@
-import { create } from 'axios';
+import { create, isAxiosError } from 'axios';
 
 import { env } from '@/shared/config/env';
 import { useSessionStore } from '@/shared/state/sessionStore';
@@ -19,3 +19,31 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: unknown) => {
+    if (
+      isAxiosError(error) &&
+      error.response?.status === 401 &&
+      !isCredentialRequest(error.config?.url) &&
+      useSessionStore.getState().token
+    ) {
+      try {
+        await useSessionStore.getState().clearSession();
+      } catch {
+        useSessionStore.setState({ token: null });
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+function isCredentialRequest(url: string | undefined): boolean {
+  if (!url) {
+    return false;
+  }
+
+  return url.endsWith('/api/auth/login') || url.endsWith('/api/auth/register');
+}

@@ -44,7 +44,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/shared/config/env.test.ts"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test src/shared/config/env.test.ts src/features/auth/validation.test.ts src/features/auth/request.test.ts src/features/auth/parse.test.ts src/features/auth/errors.test.ts"
   },
   "private": true
 }

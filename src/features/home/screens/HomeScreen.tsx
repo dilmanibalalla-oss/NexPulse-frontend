@@ -12,7 +12,7 @@ export function HomeScreen() {
       <View style={{ gap: theme.spacing.md }}>
         <Text variant="label">NexPulse</Text>
         <Text accessibilityRole="header" variant="display">
-          Service monitoring
+          Dashboard
         </Text>
         <Text variant="muted">Availability and response time for the services you run.</Text>
       </View>
