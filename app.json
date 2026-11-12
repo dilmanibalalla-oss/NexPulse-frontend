@@ -28,6 +28,12 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-notifications",
+        {
+          "color": "#070D1A"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#070D1A",

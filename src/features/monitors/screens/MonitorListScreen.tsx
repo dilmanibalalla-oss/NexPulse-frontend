@@ -99,6 +99,7 @@ export function MonitorListScreen() {
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md }}>
         <Button label="Dashboard" variant="ghost" onPress={() => router.push('/')} />
+        <Button label="Alerts" variant="ghost" onPress={() => router.push('/notifications')} />
         <Button label="Add monitor" onPress={() => router.push('/monitors/new')} />
       </View>
       {notice ? <Notice message={notice} onDismiss={clearNotice} /> : null}

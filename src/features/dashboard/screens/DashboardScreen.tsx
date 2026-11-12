@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
 import { logout } from '@/features/auth/api';
+import { unregisterThisDevice } from '@/features/notifications/push';
 import { fetchMonitors } from '@/features/dashboard/api';
 import { ResultRow } from '@/features/dashboard/components/ResultRow';
 import { StatGrid } from '@/features/dashboard/components/StatGrid';
@@ -115,6 +116,7 @@ function DashboardHeader({ onError }: { onError: (message: string) => void }) {
   async function signOut() {
     setSigningOut(true);
     try {
+      await unregisterThisDevice();
       await logout();
     } catch (error) {
       setSigningOut(false);
@@ -143,6 +145,7 @@ function DashboardHeader({ onError }: { onError: (message: string) => void }) {
             router.push('/monitors/index');
           }}
         />
+        <Button label="Alerts" variant="ghost" onPress={() => router.push('/notifications')} />
         <Button
           label="Sign out"
           variant="ghost"

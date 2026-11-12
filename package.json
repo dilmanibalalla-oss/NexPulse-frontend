@@ -6,8 +6,10 @@
     "axios": "^1.21.1",
     "expo": "~58.0.24",
     "expo-constants": "~58.0.16",
+    "expo-device": "~58.0.5",
     "expo-linear-gradient": "~58.0.4",
     "expo-linking": "~58.0.17",
+    "expo-notifications": "~58.1.9",
     "expo-router": "~58.0.31",
     "expo-secure-store": "~58.0.3",
     "expo-splash-screen": "~58.0.14",
@@ -44,7 +46,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --import ./src/test/register-alias.mjs --test src/shared/config/env.test.ts src/shared/state/createSessionStore.test.ts src/shared/api/interceptors.test.ts src/shared/api/services/auth.test.ts src/shared/api/services/monitors.test.ts src/shared/api/services/history.test.ts src/shared/api/services/dashboard.test.ts src/features/auth/validation.test.ts src/features/auth/request.test.ts src/features/auth/parse.test.ts src/features/auth/errors.test.ts src/features/dashboard/parse.test.ts src/features/dashboard/summary.test.ts src/features/dashboard/format.test.ts src/features/dashboard/errors.test.ts src/features/monitors/validation.test.ts src/features/monitors/historyView.test.ts src/shared/api/errors.test.ts"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --import ./src/test/register-alias.mjs --test src/shared/config/env.test.ts src/shared/state/createSessionStore.test.ts src/shared/api/interceptors.test.ts src/shared/api/services/auth.test.ts src/shared/api/services/monitors.test.ts src/shared/api/services/history.test.ts src/shared/api/services/dashboard.test.ts src/features/auth/validation.test.ts src/features/auth/request.test.ts src/features/auth/parse.test.ts src/features/auth/errors.test.ts src/features/dashboard/parse.test.ts src/features/dashboard/summary.test.ts src/features/dashboard/format.test.ts src/features/dashboard/errors.test.ts src/features/monitors/validation.test.ts src/features/monitors/historyView.test.ts src/features/notifications/observeMonitors.test.ts src/shared/api/services/notifications.test.ts src/shared/api/errors.test.ts"
   },
   "private": true
 }
