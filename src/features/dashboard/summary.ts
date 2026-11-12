@@ -8,6 +8,7 @@ export type DashboardSummary = {
   down: number;
   unknown: number;
   averageResponseTimeMs: number | null;
+  uptimePercent: number | null;
   recent: Monitor[];
 };
 
@@ -32,12 +33,17 @@ export function summarizeMonitors(monitors: Monitor[]): DashboardSummary {
     })
     .slice(0, RECENT_RESULT_LIMIT);
 
+  const up = monitors.filter((monitor) => monitor.status === 'UP').length;
+  const down = monitors.filter((monitor) => monitor.status === 'DOWN').length;
+  const observed = up + down;
+
   return {
     total: monitors.length,
-    up: monitors.filter((monitor) => monitor.status === 'UP').length,
-    down: monitors.filter((monitor) => monitor.status === 'DOWN').length,
+    up,
+    down,
     unknown: monitors.filter((monitor) => monitor.status === 'UNKNOWN').length,
     averageResponseTimeMs,
+    uptimePercent: observed === 0 ? null : Math.round((up / observed) * 100),
     recent,
   };
 }

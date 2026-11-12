@@ -7,10 +7,13 @@ import type { Monitor } from './types.ts';
 function monitor(overrides: Partial<Monitor> & Pick<Monitor, 'id' | 'name' | 'status'>): Monitor {
   return {
     url: 'https://example.com',
+    intervalSeconds: 60,
     lastStatusCode: null,
     lastResponseTime: null,
     lastCheckedAt: null,
     enabled: true,
+    createdAt: '2026-11-12T11:00:00Z',
+    ownerId: 1,
     ...overrides,
   };
 }
@@ -47,6 +50,7 @@ describe('summarizeMonitors', () => {
     assert.equal(summary.down, 1);
     assert.equal(summary.unknown, 1);
     assert.equal(summary.averageResponseTimeMs, 133);
+    assert.equal(summary.uptimePercent, 67);
     assert.deepEqual(
       summary.recent.map((item) => item.name),
       ['Up slow', 'Up fast', 'Down'],
@@ -62,6 +66,7 @@ describe('summarizeMonitors', () => {
       down: 0,
       unknown: 0,
       averageResponseTimeMs: null,
+      uptimePercent: null,
       recent: [],
     });
   });

@@ -24,11 +24,14 @@ describe('parseMonitorList', () => {
         id: 4,
         name: 'API',
         url: 'https://example.com/health',
+        intervalSeconds: 30,
         status: 'UP',
         lastStatusCode: 200,
         lastResponseTime: 120,
         lastCheckedAt: '2026-11-12T12:00:00Z',
         enabled: true,
+        createdAt: '2026-11-12T11:00:00Z',
+        ownerId: 1,
       },
     ]);
   });

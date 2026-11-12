@@ -1,5 +1,6 @@
 import { create, isAxiosError } from 'axios';
 
+import { bearerValue, shouldEndSession } from '@/shared/api/interceptors';
 import { env } from '@/shared/config/env';
 import { useSessionStore } from '@/shared/state/sessionStore';
 
@@ -15,7 +16,7 @@ export const apiClient = create({
 apiClient.interceptors.request.use((config) => {
   const token = useSessionStore.getState().token;
   if (token) {
-    config.headers.set('Authorization', `Bearer ${token}`);
+    config.headers.set('Authorization', bearerValue(token));
   }
   return config;
 });
@@ -25,9 +26,7 @@ apiClient.interceptors.response.use(
   async (error: unknown) => {
     if (
       isAxiosError(error) &&
-      error.response?.status === 401 &&
-      !isCredentialRequest(error.config?.url) &&
-      useSessionStore.getState().token
+      shouldEndSession(error.response?.status, error.config?.url, useSessionStore.getState().token)
     ) {
       try {
         await useSessionStore.getState().clearSession();
@@ -39,11 +38,3 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-
-function isCredentialRequest(url: string | undefined): boolean {
-  if (!url) {
-    return false;
-  }
-
-  return url.endsWith('/api/auth/login') || url.endsWith('/api/auth/register');
-}

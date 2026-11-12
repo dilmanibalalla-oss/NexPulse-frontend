@@ -36,7 +36,7 @@ function parseMonitor(data: unknown): Monitor | null {
     return null;
   }
 
-  if (!isStatus(data.status)) {
+  if (!isInterval(data.intervalSeconds) || !isStatus(data.status)) {
     return null;
   }
 
@@ -59,15 +59,22 @@ function parseMonitor(data: unknown): Monitor | null {
     return null;
   }
 
+  if (!isInstant(data.createdAt) || !isId(data.ownerId)) {
+    return null;
+  }
+
   return {
     id: data.id,
     name: data.name,
     url: data.url,
+    intervalSeconds: data.intervalSeconds,
     status: data.status,
     lastStatusCode,
     lastResponseTime,
     lastCheckedAt,
     enabled: data.enabled,
+    createdAt: data.createdAt,
+    ownerId: data.ownerId,
   };
 }
 
@@ -105,6 +112,18 @@ function parseCheckedAt(value: unknown): string | null | undefined {
   }
 
   return value;
+}
+
+function isInterval(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 86_400;
+}
+
+function isId(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1;
+}
+
+function isInstant(value: unknown): value is string {
+  return typeof value === 'string' && !Number.isNaN(Date.parse(value));
 }
 
 function isStatus(value: unknown): value is MonitorStatus {

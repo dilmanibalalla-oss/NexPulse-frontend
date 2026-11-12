@@ -18,10 +18,10 @@ export function StatGrid({ summary }: StatGridProps) {
   const cardWidth = Math.floor((innerWidth - gap * (columns - 1)) / columns);
   const cards = [
     {
-      label: 'Websites',
+      label: 'Monitors',
       value: String(summary.total),
       tone: 'accent' as const,
-      accessibilityLabel: `Total monitored websites, ${summary.total}`,
+      accessibilityLabel: `Total monitors, ${summary.total}`,
     },
     {
       label: 'Up',

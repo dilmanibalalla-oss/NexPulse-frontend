@@ -1,46 +1,24 @@
 import { apiClient } from '@/shared/api/client';
+import { bindClient } from '@/shared/api/http';
+import { loginAccount, registerAccount } from '@/shared/api/services/auth';
 import { useSessionStore } from '@/shared/state/sessionStore';
 
-import { AuthRequestError, toAuthRequestError } from './errors';
-import { parseAuthTokenResponse, parseRegisteredUser } from './parse';
-import {
-  loginRequestBody,
-  registerRequestBody,
-  type LoginInput,
-  type RegisterInput,
-} from './request';
-
-const LOGIN_PATH = '/api/auth/login';
-const REGISTER_PATH = '/api/auth/register';
+import { AuthRequestError } from './errors';
+import type { LoginInput, RegisterInput } from './request';
 
 export async function login(input: LoginInput): Promise<string> {
-  try {
-    const response = await apiClient.post(LOGIN_PATH, loginRequestBody(input));
-    const session = parseAuthTokenResponse(response.data);
-    if (!session) {
-      throw new AuthRequestError(
-        'The server returned an unexpected sign-in response.',
-        response.status,
-      );
-    }
-
-    return session.token;
-  } catch (error) {
-    throw toAuthRequestError(error);
-  }
+  return loginAccount(bindClient(apiClient), input);
 }
 
 export async function register(input: RegisterInput): Promise<void> {
+  return registerAccount(bindClient(apiClient), input);
+}
+
+export async function logout(): Promise<void> {
   try {
-    const response = await apiClient.post(REGISTER_PATH, registerRequestBody(input));
-    if (!parseRegisteredUser(response.data)) {
-      throw new AuthRequestError(
-        'The server returned an unexpected registration response.',
-        response.status,
-      );
-    }
-  } catch (error) {
-    throw toAuthRequestError(error);
+    await useSessionStore.getState().clearSession();
+  } catch {
+    throw new AuthRequestError('Could not sign out on this device. Try again.', null);
   }
 }
 

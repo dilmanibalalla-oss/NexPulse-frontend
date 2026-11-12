@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { formatCheckedAt, formatResponseTime, websiteHost } from '@/features/dashboard/format';
 import type { Monitor } from '@/features/dashboard/types';
@@ -8,9 +8,10 @@ import { useAppTheme } from '@/shared/theme';
 type ResultRowProps = {
   monitor: Monitor;
   now?: number;
+  onPress?: () => void;
 };
 
-export function ResultRow({ monitor, now }: ResultRowProps) {
+export function ResultRow({ monitor, now, onPress }: ResultRowProps) {
   const theme = useAppTheme();
   const checked = monitor.lastCheckedAt
     ? formatCheckedAt(monitor.lastCheckedAt, now)
@@ -23,7 +24,7 @@ export function ResultRow({ monitor, now }: ResultRowProps) {
     .filter(Boolean)
     .join(' · ');
 
-  return (
+  const content = (
     <Card>
       <View style={{ gap: theme.spacing.sm }}>
         <View
@@ -46,6 +47,16 @@ export function ResultRow({ monitor, now }: ResultRowProps) {
         {monitor.enabled ? null : <Text variant="caption">Paused</Text>}
       </View>
     </Card>
+  );
+
+  if (!onPress) {
+    return content;
+  }
+
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={monitor.name} onPress={onPress}>
+      {content}
+    </Pressable>
   );
 }
 

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { formatCheckedAt, formatResponseTime, websiteHost } from './format.ts';
+import { formatCheckedAt, formatResponseTime, formatUptime, websiteHost } from './format.ts';
 
 describe('formatResponseTime', () => {
   it('formats milliseconds, seconds, and a missing measurement', () => {
@@ -10,6 +10,14 @@ describe('formatResponseTime', () => {
     assert.equal(formatResponseTime(850), '850 ms');
     assert.equal(formatResponseTime(1500), '1.5 s');
     assert.equal(formatResponseTime(12_400), '12 s');
+  });
+});
+
+describe('formatUptime', () => {
+  it('shows a percentage or a dash when nothing has been checked', () => {
+    assert.equal(formatUptime(null), '—');
+    assert.equal(formatUptime(0), '0%');
+    assert.equal(formatUptime(99), '99%');
   });
 });
 

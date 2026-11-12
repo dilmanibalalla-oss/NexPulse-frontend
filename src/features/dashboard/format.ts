@@ -1,3 +1,11 @@
+export function formatUptime(percent: number | null): string {
+  if (percent == null) {
+    return '—';
+  }
+
+  return `${percent}%`;
+}
+
 export function formatResponseTime(milliseconds: number | null): string {
   if (milliseconds == null) {
     return '—';
