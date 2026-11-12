@@ -1,23 +1,27 @@
-import { useState } from 'react';
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { useState, type ReactNode, type Ref } from 'react';
+import { StyleSheet, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 
 import { Text } from '@/shared/components/Text';
 import { useAppTheme } from '@/shared/theme';
 
 type TextFieldProps = Omit<TextInputProps, 'style' | 'value' | 'onChangeText'> & {
+  ref?: Ref<TextInputInstance>;
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
   hint?: string;
+  labelAccessory?: ReactNode;
 };
 
 export function TextField({
+  ref,
   label,
   value,
   onChangeText,
   error,
   hint,
+  labelAccessory,
   editable = true,
   accessibilityLabel,
   onFocus,
@@ -35,11 +39,18 @@ export function TextField({
 
   return (
     <View style={{ gap: theme.spacing.sm, opacity: editable ? 1 : 0.55 }}>
-      <Text variant="caption" style={{ color: theme.colors.text, fontWeight: '600' }}>
-        {label}
-      </Text>
+      <View style={[styles.labelRow, { gap: theme.spacing.sm }]}>
+        <Text
+          variant="caption"
+          style={{ color: theme.colors.text, fontWeight: '600', flexShrink: 1 }}
+        >
+          {label}
+        </Text>
+        {labelAccessory}
+      </View>
       <TextInput
         {...rest}
+        ref={ref}
         value={value}
         onChangeText={onChangeText}
         editable={editable}
@@ -85,6 +96,11 @@ export function TextField({
 }
 
 const styles = StyleSheet.create({
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   input: {
     borderWidth: 1,
     width: '100%',

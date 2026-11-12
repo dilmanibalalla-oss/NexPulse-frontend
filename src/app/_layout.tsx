@@ -25,18 +25,33 @@ export default function RootLayout() {
     <AppThemeProvider>
       <ThemeProvider value={navigationTheme}>
         <StatusBar style="light" />
-        {hydrated ? (
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              animation: 'fade',
-              contentStyle: { backgroundColor: colors.background },
-            }}
-          />
-        ) : (
-          <BootScreen />
-        )}
+        {hydrated ? <RootNavigator /> : <BootScreen />}
       </ThemeProvider>
     </AppThemeProvider>
+  );
+}
+
+function RootNavigator() {
+  const authenticated = useSessionStore((state) => {
+    const token = state.token;
+    return typeof token === 'string' && token.trim().length > 0;
+  });
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: 'fade',
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Protected guard={authenticated} redirectTo="/login">
+        <Stack.Screen name="(app)" />
+      </Stack.Protected>
+      <Stack.Protected guard={!authenticated} redirectTo="/">
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+      </Stack.Protected>
+    </Stack>
   );
 }
