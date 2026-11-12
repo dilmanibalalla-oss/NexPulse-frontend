@@ -3,13 +3,25 @@ import * as SecureStore from 'expo-secure-store';
 const TOKEN_KEY = 'nexpulse.session.token';
 
 export async function readAuthToken(): Promise<string | null> {
+  if (!(await SecureStore.isAvailableAsync())) {
+    return null;
+  }
+
   return SecureStore.getItemAsync(TOKEN_KEY);
 }
 
 export async function saveAuthToken(token: string): Promise<void> {
+  if (!(await SecureStore.isAvailableAsync())) {
+    throw new Error('SecureStore is not available on this device.');
+  }
+
   await SecureStore.setItemAsync(TOKEN_KEY, token);
 }
 
 export async function clearAuthToken(): Promise<void> {
+  if (!(await SecureStore.isAvailableAsync())) {
+    return;
+  }
+
   await SecureStore.deleteItemAsync(TOKEN_KEY);
 }
