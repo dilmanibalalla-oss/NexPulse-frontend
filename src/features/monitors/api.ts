@@ -3,6 +3,7 @@ import { toApiError } from '@/shared/api/errors';
 import { bindClient } from '@/shared/api/http';
 import { listCheckHistory } from '@/shared/api/services/history';
 import {
+  acknowledgeIncident,
   createMonitor,
   deleteMonitor,
   getMonitor,
@@ -34,6 +35,14 @@ export async function loadMonitor(id: number): Promise<Monitor> {
 export async function saveMonitor(id: number | null, input: MonitorWrite): Promise<Monitor> {
   try {
     return id == null ? await createMonitor(http(), input) : await updateMonitor(http(), id, input);
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
+export async function acknowledgeMonitor(id: number): Promise<void> {
+  try {
+    await acknowledgeIncident(http(), id);
   } catch (error) {
     throw toApiError(error);
   }

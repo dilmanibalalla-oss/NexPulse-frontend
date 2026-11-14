@@ -34,8 +34,17 @@ export function MonitorSummary({ monitor, now, onPress }: MonitorSummaryProps) {
           <StatusBadge status={monitor.status} />
         </View>
         <Text variant="muted">{monitor.url}</Text>
+        <Text variant="caption">
+          {monitor.checkType}
+          {monitor.port == null ? '' : ` port ${monitor.port}`}
+        </Text>
         <Text variant="caption">HTTP {formatStatusCode(monitor.lastStatusCode)}</Text>
         <Text variant="caption">Response time {formatResponseTime(monitor.lastResponseTime)}</Text>
+        <Text variant="caption">DNS lookup {formatResponseTime(monitor.lastDnsLookupMs)}</Text>
+        <Text variant="caption">Connection {formatResponseTime(monitor.lastConnectMs)}</Text>
+        {monitor.lastFailureKind ? (
+          <Text variant="caption">Failure {monitor.lastFailureKind}</Text>
+        ) : null}
         <Text variant="caption">Last checked {checked}</Text>
         <Text variant="caption">Interval {formatInterval(monitor.intervalSeconds)}</Text>
         {monitor.enabled ? null : <Text variant="caption">Monitoring is paused</Text>}

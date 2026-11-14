@@ -6,27 +6,33 @@ import { hasMonitorErrors, validateMonitor } from './validation.ts';
 const valid = {
   name: 'API',
   url: 'https://example.com/health',
-  intervalSeconds: '30',
+  intervalSeconds: '60',
   enabled: true,
+  checkType: 'HTTP' as const,
+  port: '',
+  expectedStatus: '',
+  expectedBody: '',
 };
 
 describe('validateMonitor', () => {
-  it('accepts a website inside the API limits', () => {
+  it('accepts an http check on a 1, 5, or 10 minute interval', () => {
     assert.deepEqual(validateMonitor(valid), {});
+    assert.deepEqual(validateMonitor({ ...valid, intervalSeconds: '300' }), {});
+    assert.deepEqual(validateMonitor({ ...valid, intervalSeconds: '600' }), {});
     assert.equal(hasMonitorErrors({}), false);
   });
 
-  it('rejects a missing name, a non-http URL, and an interval outside 1 to 86400', () => {
+  it('rejects a missing name, a non-http URL, and an interval outside the choices', () => {
     const errors = validateMonitor({
+      ...valid,
       name: ' ',
       url: 'ftp://example.com',
-      intervalSeconds: '0',
-      enabled: true,
+      intervalSeconds: '30',
     });
 
     assert.equal(errors.name, 'Enter a name.');
     assert.equal(errors.url, 'Enter an http or https URL.');
-    assert.match(errors.intervalSeconds ?? '', /1 to 86400/);
+    assert.equal(errors.intervalSeconds, 'Choose 1, 5, or 10 minutes.');
     assert.equal(hasMonitorErrors(errors), true);
   });
 
@@ -40,6 +46,15 @@ describe('validateMonitor', () => {
 
     assert.match(errors.name ?? '', /120/);
     assert.match(errors.url ?? '', /2048/);
-    assert.match(errors.intervalSeconds ?? '', /86400/);
+    assert.equal(errors.intervalSeconds, 'Choose 1, 5, or 10 minutes.');
+  });
+
+  it('requires https for an HTTPS check and a port for TCP', () => {
+    const https = validateMonitor({ ...valid, checkType: 'HTTPS', url: 'http://example.com' });
+    const tcp = validateMonitor({ ...valid, checkType: 'TCP', url: 'example.com', port: '0' });
+
+    assert.equal(https.url, 'Enter an https URL.');
+    assert.equal(tcp.port, 'Enter a port from 1 to 65535.');
+    assert.deepEqual(validateMonitor({ ...valid, checkType: 'TCP', url: 'example.com', port: '443' }), {});
   });
 });

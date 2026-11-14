@@ -1,4 +1,4 @@
-import type { Monitor, MonitorStatus } from './types';
+import type { CheckType, FailureKind, Monitor, MonitorStatus } from './types';
 
 const MONITOR_STATUSES = ['UP', 'DOWN', 'UNKNOWN'] as const satisfies readonly MonitorStatus[];
 
@@ -63,6 +63,21 @@ function parseMonitor(data: unknown): Monitor | null {
     return null;
   }
 
+  const port = parsePort(data.port);
+  const expectedStatus = parseStatusCode(data.expectedStatus);
+  const lastDnsLookupMs = parseResponseTime(data.lastDnsLookupMs);
+  const lastConnectMs = parseResponseTime(data.lastConnectMs);
+  const openIncidentAcknowledgedAt = parseCheckedAt(data.openIncidentAcknowledgedAt);
+  if (
+    port === undefined ||
+    expectedStatus === undefined ||
+    lastDnsLookupMs === undefined ||
+    lastConnectMs === undefined ||
+    openIncidentAcknowledgedAt === undefined
+  ) {
+    return null;
+  }
+
   return {
     id: data.id,
     name: data.name,
@@ -75,6 +90,14 @@ function parseMonitor(data: unknown): Monitor | null {
     enabled: data.enabled,
     createdAt: data.createdAt,
     ownerId: data.ownerId,
+    checkType: parseCheckType(data.checkType),
+    port,
+    expectedStatus,
+    expectedBody: typeof data.expectedBody === 'string' && data.expectedBody.trim() ? data.expectedBody : null,
+    lastDnsLookupMs,
+    lastConnectMs,
+    lastFailureKind: parseFailureKind(data.lastFailureKind),
+    openIncidentAcknowledgedAt,
   };
 }
 
@@ -124,6 +147,41 @@ function isId(value: unknown): value is number {
 
 function isInstant(value: unknown): value is string {
   return typeof value === 'string' && !Number.isNaN(Date.parse(value));
+}
+
+function parseCheckType(value: unknown): CheckType {
+  if (value === 'HTTPS' || value === 'REST' || value === 'TCP' || value === 'DNS') {
+    return value;
+  }
+
+  return 'HTTP';
+}
+
+function parseFailureKind(value: unknown): FailureKind | null {
+  if (
+    value === 'TIMEOUT' ||
+    value === 'SSL' ||
+    value === 'INVALID_RESPONSE' ||
+    value === 'SERVER_ERROR' ||
+    value === 'CONNECTION' ||
+    value === 'DNS'
+  ) {
+    return value;
+  }
+
+  return null;
+}
+
+function parsePort(value: unknown): number | null | undefined {
+  if (value == null) {
+    return null;
+  }
+
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > 65535) {
+    return undefined;
+  }
+
+  return value;
 }
 
 function isStatus(value: unknown): value is MonitorStatus {

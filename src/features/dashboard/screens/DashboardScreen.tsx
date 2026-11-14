@@ -142,7 +142,7 @@ function DashboardHeader({ onError }: { onError: (message: string) => void }) {
           label="Monitors"
           variant="ghost"
           onPress={() => {
-            router.push('/monitors/index');
+            router.push('/monitors');
           }}
         />
         <Button label="Alerts" variant="ghost" onPress={() => router.push('/notifications')} />

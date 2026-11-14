@@ -1,5 +1,6 @@
 import { parseMonitorList } from '@/features/dashboard/parse';
-import type { Monitor } from '@/features/dashboard/types';
+import type { CheckType, Monitor } from '@/features/dashboard/types';
+import { normalizeMonitorUrl } from '@/features/monitors/validation';
 
 import { ApiError, toApiError } from '../errors';
 import type { ApiClient } from '../http';
@@ -9,6 +10,10 @@ export type MonitorWrite = {
   url: string;
   intervalSeconds: number;
   enabled: boolean;
+  checkType: CheckType;
+  port: number | null;
+  expectedStatus: number | null;
+  expectedBody: string | null;
 };
 
 export async function listMonitors(client: ApiClient): Promise<Monitor[]> {
@@ -64,6 +69,14 @@ export async function updateMonitor(
   }
 }
 
+export async function acknowledgeIncident(client: ApiClient, id: number): Promise<void> {
+  try {
+    await client.post(`/api/monitors/${id}/incidents/acknowledge`);
+  } catch (error) {
+    throw toApiError(error);
+  }
+}
+
 export async function deleteMonitor(client: ApiClient, id: number): Promise<void> {
   try {
     await client.delete(`/api/monitors/${id}`);
@@ -87,10 +100,16 @@ async function readMonitors(client: ApiClient, url: string): Promise<Monitor[]> 
 }
 
 function monitorBody(input: MonitorWrite): MonitorWrite {
+  const checkType = input.checkType;
   return {
     name: input.name.trim(),
-    url: input.url.trim(),
+    url: normalizeMonitorUrl(checkType, input.url),
     intervalSeconds: input.intervalSeconds,
     enabled: input.enabled,
+    checkType,
+    port: checkType === 'TCP' ? input.port : null,
+    expectedStatus: checkType === 'REST' ? input.expectedStatus : null,
+    expectedBody:
+      checkType === 'REST' && input.expectedBody?.trim() ? input.expectedBody.trim() : null,
   };
 }

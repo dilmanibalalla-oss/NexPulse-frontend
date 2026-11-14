@@ -32,6 +32,14 @@ describe('parseMonitorList', () => {
         enabled: true,
         createdAt: '2026-11-12T11:00:00Z',
         ownerId: 1,
+        checkType: 'HTTP',
+        port: null,
+        expectedStatus: null,
+        expectedBody: null,
+        lastDnsLookupMs: null,
+        lastConnectMs: null,
+        lastFailureKind: null,
+        openIncidentAcknowledgedAt: null,
       },
     ]);
   });

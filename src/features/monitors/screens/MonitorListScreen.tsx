@@ -3,8 +3,9 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
 import type { Monitor } from '@/features/dashboard/types';
-import { loadMonitors } from '@/features/monitors/api';
+import { loadMonitors, removeMonitor } from '@/features/monitors/api';
 import { MonitorSummary } from '@/features/monitors/components/MonitorSummary';
+import { MonitorFormScreen } from '@/features/monitors/screens/MonitorFormScreen';
 import { useMonitorNotice } from '@/features/monitors/notice';
 import { Button, Card, ErrorMessage, LoadingIndicator, Screen, Text } from '@/shared/components';
 import { useAppTheme } from '@/shared/theme';
@@ -23,6 +24,10 @@ export function MonitorListScreen() {
   const notice = useMonitorNotice((state) => state.message);
   const clearNotice = useMonitorNotice((state) => state.clear);
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   function applyMonitors(monitors: Monitor[]) {
     setState({ status: 'ready', monitors, refreshing: false, refreshError: null });
@@ -71,6 +76,37 @@ export function MonitorListScreen() {
     }, []),
   );
 
+  function deleteMonitor(id: number) {
+    setDeleting(true);
+    setActionError(null);
+    void removeMonitor(id).then(
+      () => {
+        setDeleting(false);
+        setPendingDeleteId(null);
+        useMonitorNotice.getState().setMessage('Monitor deleted.');
+        void loadMonitors().then(applyMonitors, applyError);
+      },
+      (error: unknown) => {
+        setDeleting(false);
+        setActionError(
+          error instanceof Error ? error.message : 'The monitor could not be deleted. Try again.',
+        );
+      },
+    );
+  }
+
+  if (editingId != null) {
+    return (
+      <MonitorFormScreen
+        monitorId={editingId}
+        onFinished={() => {
+          setEditingId(null);
+          void loadMonitors().then(applyMonitors, applyError);
+        }}
+      />
+    );
+  }
+
   if (state.status === 'loading') {
     return (
       <Screen centered>
@@ -97,13 +133,10 @@ export function MonitorListScreen() {
         </Text>
         <Text variant="muted">Websites checked on the interval you set.</Text>
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md }}>
-        <Button label="Dashboard" variant="ghost" onPress={() => router.push('/')} />
-        <Button label="Alerts" variant="ghost" onPress={() => router.push('/notifications')} />
-        <Button label="Add monitor" onPress={() => router.push('/monitors/new')} />
-      </View>
+      <Button label="Add monitor" onPress={() => router.push('/monitors/new')} />
       {notice ? <Notice message={notice} onDismiss={clearNotice} /> : null}
       {state.refreshError ? <ErrorMessage message={state.refreshError} onRetry={refresh} /> : null}
+      {actionError ? <ErrorMessage message={actionError} /> : null}
       {state.monitors.length === 0 ? (
         <Card>
           <View style={{ gap: theme.spacing.sm }}>
@@ -113,13 +146,40 @@ export function MonitorListScreen() {
         </Card>
       ) : (
         state.monitors.map((monitor) => (
-          <MonitorSummary
-            key={monitor.id}
-            monitor={monitor}
-            onPress={() =>
-              router.push({ pathname: '/monitors/[id]/index', params: { id: String(monitor.id) } })
-            }
-          />
+          <View key={monitor.id} style={{ gap: theme.spacing.sm }}>
+            <MonitorSummary monitor={monitor} />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md }}>
+              <Button label="Edit" variant="secondary" onPress={() => setEditingId(monitor.id)} />
+              <Button
+                label="Delete"
+                variant="danger"
+                onPress={() => {
+                  setActionError(null);
+                  setPendingDeleteId(monitor.id);
+                }}
+              />
+            </View>
+            {pendingDeleteId === monitor.id ? (
+              <Card>
+                <View style={{ gap: theme.spacing.md }}>
+                  <Text variant="heading">Delete {monitor.name}?</Text>
+                  <Text variant="muted">Its saved checks will be removed.</Text>
+                  <Button
+                    label="Delete monitor"
+                    variant="danger"
+                    loading={deleting}
+                    onPress={() => deleteMonitor(monitor.id)}
+                  />
+                  <Button
+                    label="Cancel"
+                    variant="secondary"
+                    disabled={deleting}
+                    onPress={() => setPendingDeleteId(null)}
+                  />
+                </View>
+              </Card>
+            ) : null}
+          </View>
         ))
       )}
     </Screen>

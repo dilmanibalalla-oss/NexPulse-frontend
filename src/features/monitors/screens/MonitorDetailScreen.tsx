@@ -4,7 +4,7 @@ import { View } from 'react-native';
 
 import { formatCheckedAt, formatResponseTime, formatUptime } from '@/features/dashboard/format';
 import type { Monitor } from '@/features/dashboard/types';
-import { loadCheckHistory, loadMonitor, removeMonitor } from '@/features/monitors/api';
+import { acknowledgeMonitor, loadCheckHistory, loadMonitor, removeMonitor } from '@/features/monitors/api';
 import { MonitorSummary } from '@/features/monitors/components/MonitorSummary';
 import { ResponseChart } from '@/features/monitors/components/ResponseChart';
 import { formatStatusCode } from '@/features/monitors/format';
@@ -54,6 +54,7 @@ export function MonitorDetailScreen({ monitorId }: MonitorDetailScreenProps) {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [acknowledging, setAcknowledging] = useState(false);
 
   const load = useCallback(
     (mode: 'replace' | 'refresh') => {
@@ -184,12 +185,30 @@ export function MonitorDetailScreen({ monitorId }: MonitorDetailScreenProps) {
     );
   }
 
+  function acknowledge() {
+    setAcknowledging(true);
+    void acknowledgeMonitor(monitorId).then(
+      () => {
+        setAcknowledging(false);
+        load('refresh');
+      },
+      (error: unknown) => {
+        setAcknowledging(false);
+        const message =
+          error instanceof Error ? error.message : 'The incident could not be acknowledged. Try again.';
+        setState((current) =>
+          current.status === 'ready' ? { ...current, actionError: message } : current,
+        );
+      },
+    );
+  }
+
   function deleteMonitor() {
     setDeleting(true);
     void removeMonitor(monitorId).then(
       () => {
         useMonitorNotice.getState().setMessage('Monitor deleted.');
-        router.replace('/monitors/index');
+        router.replace('/monitors');
       },
       (error: unknown) => {
         setDeleting(false);
@@ -236,7 +255,7 @@ export function MonitorDetailScreen({ monitorId }: MonitorDetailScreenProps) {
   return (
     <Screen onRefresh={() => load('refresh')} refreshing={state.refreshing}>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md }}>
-        <Button label="Monitors" variant="ghost" onPress={() => router.push('/monitors/index')} />
+        <Button label="Monitors" variant="ghost" onPress={() => router.push('/monitors')} />
         <Button
           label="Edit"
           variant="secondary"
@@ -255,6 +274,18 @@ export function MonitorDetailScreen({ monitorId }: MonitorDetailScreenProps) {
       ) : null}
       {state.actionError ? <ErrorMessage message={state.actionError} /> : null}
       <MonitorSummary monitor={state.monitor} />
+      {state.monitor.status === 'DOWN' && state.monitor.openIncidentAcknowledgedAt == null ? (
+        <Button
+          label="Acknowledge incident"
+          loading={acknowledging}
+          onPress={acknowledge}
+        />
+      ) : null}
+      {state.monitor.status === 'DOWN' && state.monitor.openIncidentAcknowledgedAt != null ? (
+        <Text variant="caption">
+          Incident acknowledged {formatCheckedAt(state.monitor.openIncidentAcknowledgedAt)}
+        </Text>
+      ) : null}
       <Card accent="purple">
         <View
           accessibilityRole="text"

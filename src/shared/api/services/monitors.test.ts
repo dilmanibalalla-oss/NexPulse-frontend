@@ -28,8 +28,12 @@ const monitor = {
 const write = {
   name: ' API ',
   url: ' https://example.com/health ',
-  intervalSeconds: 30,
+  intervalSeconds: 60,
   enabled: true,
+  checkType: 'HTTP' as const,
+  port: null,
+  expectedStatus: null,
+  expectedBody: null,
 };
 
 function client(impl: Partial<ApiClient>): ApiClient {
@@ -66,8 +70,12 @@ describe('monitor API', () => {
         assert.deepEqual(body, {
           name: 'API',
           url: 'https://example.com/health',
-          intervalSeconds: 30,
+          intervalSeconds: 60,
           enabled: true,
+          checkType: 'HTTP',
+          port: null,
+          expectedStatus: null,
+          expectedBody: null,
         });
         return { status: 201, data: monitor };
       },
