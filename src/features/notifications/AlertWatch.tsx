@@ -70,7 +70,7 @@ export function AlertWatch() {
     const responses = Notifications.addNotificationResponseReceivedListener((response) => {
       const monitorId = readNotificationMonitorId(response.notification.request.content.data);
       if (monitorId != null) {
-        router.push({ pathname: '/monitors/[id]/index', params: { id: String(monitorId) } });
+        router.push({ pathname: '/monitors/[id]', params: { id: String(monitorId) } });
       }
     });
 
