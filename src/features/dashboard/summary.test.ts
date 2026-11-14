@@ -22,6 +22,15 @@ function monitor(overrides: Partial<Monitor> & Pick<Monitor, 'id' | 'name' | 'st
     lastConnectMs: null,
     lastFailureKind: null,
     openIncidentAcknowledgedAt: null,
+    httpMethod: null,
+    maxResponseTimeMs: null,
+    jsonField: null,
+    expectedJsonValue: null,
+    requestBody: null,
+    bearerTokenConfigured: false,
+    headerNames: [],
+    lastReachable: null,
+    lastAssertionsPassed: null,
     ...overrides,
   };
 }

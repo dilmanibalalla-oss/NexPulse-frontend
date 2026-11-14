@@ -1,5 +1,5 @@
 import { parseMonitorList } from '@/features/dashboard/parse';
-import type { CheckType, Monitor } from '@/features/dashboard/types';
+import type { CheckType, HttpMethod, Monitor } from '@/features/dashboard/types';
 import { normalizeMonitorUrl } from '@/features/monitors/validation';
 
 import { ApiError, toApiError } from '../errors';
@@ -14,6 +14,15 @@ export type MonitorWrite = {
   port: number | null;
   expectedStatus: number | null;
   expectedBody: string | null;
+  httpMethod: HttpMethod | null;
+  maxResponseTimeMs: number | null;
+  jsonField: string | null;
+  expectedJsonValue: string | null;
+  requestBody: string | null;
+  bearerToken: string | null;
+  headers: { name: string; value: string }[] | null;
+  removeBearerToken: boolean;
+  removeHeaders: boolean;
 };
 
 export async function listMonitors(client: ApiClient): Promise<Monitor[]> {
@@ -101,6 +110,8 @@ async function readMonitors(client: ApiClient, url: string): Promise<Monitor[]> 
 
 function monitorBody(input: MonitorWrite): MonitorWrite {
   const checkType = input.checkType;
+  const api = checkType === 'API';
+  const content = checkType === 'REST' || api;
   return {
     name: input.name.trim(),
     url: normalizeMonitorUrl(checkType, input.url),
@@ -108,8 +119,16 @@ function monitorBody(input: MonitorWrite): MonitorWrite {
     enabled: input.enabled,
     checkType,
     port: checkType === 'TCP' ? input.port : null,
-    expectedStatus: checkType === 'REST' ? input.expectedStatus : null,
-    expectedBody:
-      checkType === 'REST' && input.expectedBody?.trim() ? input.expectedBody.trim() : null,
+    expectedStatus: content ? input.expectedStatus : null,
+    expectedBody: content && input.expectedBody?.trim() ? input.expectedBody.trim() : null,
+    httpMethod: api ? input.httpMethod : null,
+    maxResponseTimeMs: api ? input.maxResponseTimeMs : null,
+    jsonField: api && input.jsonField?.trim() ? input.jsonField.trim() : null,
+    expectedJsonValue: api && input.expectedJsonValue?.trim() ? input.expectedJsonValue.trim() : null,
+    requestBody: api && input.httpMethod !== 'GET' && input.requestBody?.trim() ? input.requestBody.trim() : null,
+    bearerToken: api ? input.bearerToken : '',
+    headers: api ? input.headers : [],
+    removeBearerToken: !api || input.removeBearerToken,
+    removeHeaders: !api || input.removeHeaders,
   };
 }
