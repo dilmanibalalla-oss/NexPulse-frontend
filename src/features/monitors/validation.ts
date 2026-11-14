@@ -1,9 +1,10 @@
-import type { CheckType } from '@/features/dashboard/types';
+import type { CheckType, HttpMethod } from '@/features/dashboard/types';
 
 export const MONITOR_NAME_MAX = 120;
 export const MONITOR_URL_MAX = 2048;
 export const MONITOR_INTERVALS = [60, 300, 600] as const;
-export const MONITOR_CHECK_TYPES = ['HTTP', 'HTTPS', 'REST', 'TCP', 'DNS'] as const;
+export const MONITOR_CHECK_TYPES = ['HTTP', 'HTTPS', 'REST', 'API', 'TCP', 'DNS'] as const;
+export const HTTP_METHODS = ['GET', 'POST', 'PUT'] as const;
 
 export type MonitorField =
   | 'name'
@@ -11,7 +12,14 @@ export type MonitorField =
   | 'intervalSeconds'
   | 'port'
   | 'expectedStatus'
-  | 'expectedBody';
+  | 'expectedBody'
+  | 'maxResponseTimeMs'
+  | 'jsonField'
+  | 'expectedJsonValue'
+  | 'requestBody'
+  | 'bearerToken'
+  | 'headerName'
+  | 'headerValue';
 export type MonitorFieldErrors = Partial<Record<MonitorField, string>>;
 
 export type MonitorFormValues = {
@@ -23,6 +31,14 @@ export type MonitorFormValues = {
   port: string;
   expectedStatus: string;
   expectedBody: string;
+  httpMethod: HttpMethod;
+  maxResponseTimeMs: string;
+  jsonField: string;
+  expectedJsonValue: string;
+  requestBody: string;
+  bearerToken: string;
+  headerName: string;
+  headerValue: string;
 };
 
 export function validateMonitor(values: MonitorFormValues): MonitorFieldErrors {
@@ -44,7 +60,7 @@ export function validateMonitor(values: MonitorFormValues): MonitorFieldErrors {
   } else if (checkType === 'HTTPS' && !isHttpsUrl(url)) {
     errors.url = 'Enter an https URL.';
   } else if (
-    (checkType === 'HTTP' || checkType === 'REST') &&
+    (checkType === 'HTTP' || checkType === 'REST' || checkType === 'API') &&
     !isHttpUrl(url)
   ) {
     errors.url = 'Enter an http or https URL.';
@@ -60,12 +76,49 @@ export function validateMonitor(values: MonitorFormValues): MonitorFieldErrors {
     errors.port = 'Enter a port from 1 to 65535.';
   }
 
-  if (checkType === 'REST' && values.expectedStatus.trim() && !isExpectedStatus(values.expectedStatus)) {
+  if (
+    (checkType === 'REST' || checkType === 'API') &&
+    values.expectedStatus.trim() &&
+    !isExpectedStatus(values.expectedStatus)
+  ) {
     errors.expectedStatus = 'Enter a status from 100 to 599.';
   }
 
-  if (checkType === 'REST' && values.expectedBody.trim().length > 200) {
+  if ((checkType === 'REST' || checkType === 'API') && values.expectedBody.trim().length > 200) {
     errors.expectedBody = 'Expected text must be 200 characters or fewer.';
+  }
+
+  if (checkType === 'API' && values.maxResponseTimeMs.trim() && !isMaxResponseTime(values.maxResponseTimeMs)) {
+    errors.maxResponseTimeMs = 'Enter a maximum from 1 to 120000 milliseconds.';
+  }
+
+  if (checkType === 'API' && values.expectedJsonValue.trim() && !values.jsonField.trim()) {
+    errors.jsonField = 'Enter the JSON field to compare.';
+  } else if (checkType === 'API' && values.jsonField.trim() && !/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)*$/.test(values.jsonField.trim())) {
+    errors.jsonField = 'Use letters, numbers, and dots, such as status or data.status.';
+  }
+
+  if (checkType === 'API' && values.expectedJsonValue.trim().length > 200) {
+    errors.expectedJsonValue = 'Expected value must be 200 characters or fewer.';
+  }
+
+  if (checkType === 'API' && values.requestBody.trim().length > 4000) {
+    errors.requestBody = 'Request body must be 4000 characters or fewer.';
+  }
+
+  if (checkType === 'API' && values.bearerToken.trim().length > 2000) {
+    errors.bearerToken = 'Bearer token must be 2000 characters or fewer.';
+  }
+
+  if (checkType === 'API' && (values.headerName.trim() || values.headerValue.trim())) {
+    if (!/^[A-Za-z0-9-]+$/.test(values.headerName.trim())) {
+      errors.headerName = 'Use a header name such as X-Request-Id.';
+    }
+    if (!values.headerValue.trim()) {
+      errors.headerValue = 'Enter a header value.';
+    } else if (values.headerValue.length > 2000 || /[\r\n]/.test(values.headerValue)) {
+      errors.headerValue = 'Header value must be one line of 2000 characters or fewer.';
+    }
   }
 
   return errors;
@@ -91,6 +144,15 @@ function isPort(value: string): boolean {
 
   const port = Number(value);
   return port >= 1 && port <= 65535;
+}
+
+function isMaxResponseTime(value: string): boolean {
+  if (!/^\d+$/.test(value.trim())) {
+    return false;
+  }
+
+  const time = Number(value);
+  return time >= 1 && time <= 120_000;
 }
 
 function isExpectedStatus(value: string): boolean {

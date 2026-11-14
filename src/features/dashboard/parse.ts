@@ -1,4 +1,4 @@
-import type { CheckType, FailureKind, Monitor, MonitorStatus } from './types';
+import type { CheckType, FailureKind, HttpMethod, Monitor, MonitorStatus } from './types';
 
 const MONITOR_STATUSES = ['UP', 'DOWN', 'UNKNOWN'] as const satisfies readonly MonitorStatus[];
 
@@ -68,12 +68,20 @@ function parseMonitor(data: unknown): Monitor | null {
   const lastDnsLookupMs = parseResponseTime(data.lastDnsLookupMs);
   const lastConnectMs = parseResponseTime(data.lastConnectMs);
   const openIncidentAcknowledgedAt = parseCheckedAt(data.openIncidentAcknowledgedAt);
+  const maxResponseTimeMs = parseResponseTime(data.maxResponseTimeMs);
+  const headerNames = parseNames(data.headerNames);
+  const lastReachable = parseFlag(data.lastReachable);
+  const lastAssertionsPassed = parseFlag(data.lastAssertionsPassed);
   if (
     port === undefined ||
     expectedStatus === undefined ||
     lastDnsLookupMs === undefined ||
     lastConnectMs === undefined ||
-    openIncidentAcknowledgedAt === undefined
+    openIncidentAcknowledgedAt === undefined ||
+    maxResponseTimeMs === undefined ||
+    headerNames === undefined ||
+    lastReachable === undefined ||
+    lastAssertionsPassed === undefined
   ) {
     return null;
   }
@@ -98,6 +106,15 @@ function parseMonitor(data: unknown): Monitor | null {
     lastConnectMs,
     lastFailureKind: parseFailureKind(data.lastFailureKind),
     openIncidentAcknowledgedAt,
+    httpMethod: parseHttpMethod(data.httpMethod),
+    maxResponseTimeMs,
+    jsonField: optionalText(data.jsonField),
+    expectedJsonValue: optionalText(data.expectedJsonValue),
+    requestBody: optionalText(data.requestBody),
+    bearerTokenConfigured: data.bearerTokenConfigured === true,
+    headerNames,
+    lastReachable,
+    lastAssertionsPassed,
   };
 }
 
@@ -150,11 +167,47 @@ function isInstant(value: unknown): value is string {
 }
 
 function parseCheckType(value: unknown): CheckType {
-  if (value === 'HTTPS' || value === 'REST' || value === 'TCP' || value === 'DNS') {
+  if (value === 'HTTPS' || value === 'REST' || value === 'API' || value === 'TCP' || value === 'DNS') {
     return value;
   }
 
   return 'HTTP';
+}
+
+function parseHttpMethod(value: unknown): HttpMethod | null {
+  if (value === 'GET' || value === 'POST' || value === 'PUT') {
+    return value;
+  }
+
+  return null;
+}
+
+function optionalText(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
+function parseFlag(value: unknown): boolean | null | undefined {
+  if (value == null) {
+    return null;
+  }
+
+  if (typeof value !== 'boolean') {
+    return undefined;
+  }
+
+  return value;
+}
+
+function parseNames(value: unknown): string[] | undefined {
+  if (value == null) {
+    return [];
+  }
+
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+    return undefined;
+  }
+
+  return value;
 }
 
 function parseFailureKind(value: unknown): FailureKind | null {

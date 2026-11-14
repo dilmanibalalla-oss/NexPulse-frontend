@@ -35,6 +35,8 @@ export type CheckResultResponse = {
   statusCode: number | null;
   responseTimeMs: number | null;
   errorMessage: string | null;
+  reachable?: boolean | null;
+  assertionsPassed?: boolean | null;
 };
 
 export type CheckHistoryPage = {

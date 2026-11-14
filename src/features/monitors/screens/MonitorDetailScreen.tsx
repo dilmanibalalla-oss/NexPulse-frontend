@@ -430,6 +430,14 @@ function CheckHistory({
               <Text variant="caption">
                 Response time {formatResponseTime(check.responseTimeMs)}
               </Text>
+              {check.reachable == null ? null : (
+                <Text variant="caption">{check.reachable ? 'Endpoint reachable' : 'Endpoint unreachable'}</Text>
+              )}
+              {check.assertionsPassed == null ? null : (
+                <Text variant="caption">
+                  {check.assertionsPassed ? 'Response matches' : 'Response does not match'}
+                </Text>
+              )}
               {check.errorMessage ? <Text variant="muted">{check.errorMessage}</Text> : null}
             </View>
           </Card>

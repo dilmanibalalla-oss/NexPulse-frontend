@@ -25,6 +25,15 @@ function monitor(id: number, status: Monitor['status'], name = `Site ${id}`): Mo
     lastConnectMs: null,
     lastFailureKind: null,
     openIncidentAcknowledgedAt: null,
+    httpMethod: null,
+    maxResponseTimeMs: null,
+    jsonField: null,
+    expectedJsonValue: null,
+    requestBody: null,
+    bearerTokenConfigured: false,
+    headerNames: [],
+    lastReachable: null,
+    lastAssertionsPassed: null,
   };
 }
 

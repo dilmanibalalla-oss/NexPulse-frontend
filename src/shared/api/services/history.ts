@@ -92,6 +92,8 @@ function parseCheckResult(data: unknown): CheckResultResponse | null {
     statusCode,
     responseTimeMs,
     errorMessage: typeof data.errorMessage === 'string' ? data.errorMessage : null,
+    reachable: typeof data.reachable === 'boolean' ? data.reachable : null,
+    assertionsPassed: typeof data.assertionsPassed === 'boolean' ? data.assertionsPassed : null,
   };
 }
 

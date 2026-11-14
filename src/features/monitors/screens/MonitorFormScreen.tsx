@@ -2,10 +2,11 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Switch, View } from 'react-native';
 
-import type { CheckType } from '@/features/dashboard/types';
+import type { CheckType, HttpMethod } from '@/features/dashboard/types';
 import { loadMonitor, saveMonitor } from '@/features/monitors/api';
 import { useMonitorNotice } from '@/features/monitors/notice';
 import {
+  HTTP_METHODS,
   MONITOR_CHECK_TYPES,
   MONITOR_INTERVALS,
   hasMonitorErrors,
@@ -44,6 +45,18 @@ export function MonitorFormScreen({ monitorId, onFinished }: MonitorFormScreenPr
   const [port, setPort] = useState('');
   const [expectedStatus, setExpectedStatus] = useState('');
   const [expectedBody, setExpectedBody] = useState('');
+  const [httpMethod, setHttpMethod] = useState<HttpMethod>('GET');
+  const [maxResponseTimeMs, setMaxResponseTimeMs] = useState('2000');
+  const [jsonField, setJsonField] = useState('');
+  const [expectedJsonValue, setExpectedJsonValue] = useState('');
+  const [requestBody, setRequestBody] = useState('');
+  const [bearerToken, setBearerToken] = useState('');
+  const [headerName, setHeaderName] = useState('');
+  const [headerValue, setHeaderValue] = useState('');
+  const [removeBearerToken, setRemoveBearerToken] = useState(false);
+  const [removeHeaders, setRemoveHeaders] = useState(false);
+  const [bearerTokenConfigured, setBearerTokenConfigured] = useState(false);
+  const [savedHeaderNames, setSavedHeaderNames] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<MonitorFieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(monitorId != null);
@@ -72,6 +85,18 @@ export function MonitorFormScreen({ monitorId, onFinished }: MonitorFormScreenPr
         setPort(monitor.port == null ? '' : String(monitor.port));
         setExpectedStatus(monitor.expectedStatus == null ? '' : String(monitor.expectedStatus));
         setExpectedBody(monitor.expectedBody ?? '');
+        setHttpMethod(monitor.httpMethod ?? 'GET');
+        setMaxResponseTimeMs(monitor.maxResponseTimeMs == null ? '2000' : String(monitor.maxResponseTimeMs));
+        setJsonField(monitor.jsonField ?? '');
+        setExpectedJsonValue(monitor.expectedJsonValue ?? '');
+        setRequestBody(monitor.requestBody ?? '');
+        setBearerToken('');
+        setHeaderName('');
+        setHeaderValue('');
+        setRemoveBearerToken(false);
+        setRemoveHeaders(false);
+        setBearerTokenConfigured(monitor.bearerTokenConfigured);
+        setSavedHeaderNames(monitor.headerNames);
         setLoading(false);
       },
       (error: unknown) => {
@@ -101,6 +126,14 @@ export function MonitorFormScreen({ monitorId, onFinished }: MonitorFormScreenPr
       port,
       expectedStatus,
       expectedBody,
+      httpMethod,
+      maxResponseTimeMs,
+      jsonField,
+      expectedJsonValue,
+      requestBody,
+      bearerToken,
+      headerName,
+      headerValue,
     };
     const errors = validateMonitor(values);
     setFieldErrors(errors);
@@ -117,8 +150,24 @@ export function MonitorFormScreen({ monitorId, onFinished }: MonitorFormScreenPr
       enabled,
       checkType,
       port: checkType === 'TCP' ? Number(port) : null,
-      expectedStatus: checkType === 'REST' && expectedStatus.trim() ? Number(expectedStatus) : null,
-      expectedBody: checkType === 'REST' ? expectedBody : null,
+      expectedStatus:
+        (checkType === 'REST' || checkType === 'API') && expectedStatus.trim()
+          ? Number(expectedStatus)
+          : null,
+      expectedBody: checkType === 'REST' || checkType === 'API' ? expectedBody : null,
+      httpMethod: checkType === 'API' ? httpMethod : null,
+      maxResponseTimeMs:
+        checkType === 'API' && maxResponseTimeMs.trim() ? Number(maxResponseTimeMs) : null,
+      jsonField: checkType === 'API' ? jsonField : null,
+      expectedJsonValue: checkType === 'API' ? expectedJsonValue : null,
+      requestBody: checkType === 'API' ? requestBody : null,
+      bearerToken: checkType === 'API' && bearerToken.trim() ? bearerToken.trim() : null,
+      headers:
+        checkType === 'API' && headerName.trim()
+          ? [{ name: headerName.trim(), value: headerValue }]
+          : null,
+      removeBearerToken: checkType === 'API' && removeBearerToken,
+      removeHeaders: checkType === 'API' && removeHeaders,
     }).then(
       () => {
         useMonitorNotice
@@ -255,6 +304,140 @@ export function MonitorFormScreen({ monitorId, onFinished }: MonitorFormScreenPr
             autoCorrect={false}
             maxLength={200}
           />
+        </>
+      ) : null}
+      {checkType === 'API' ? (
+        <>
+          <View style={{ gap: theme.spacing.sm }}>
+            <Text variant="label">Method</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm }}>
+              {HTTP_METHODS.map((method) => (
+                <Button
+                  key={method}
+                  label={method}
+                  variant={httpMethod === method ? 'primary' : 'secondary'}
+                  disabled={saving}
+                  onPress={() => setHttpMethod(method)}
+                />
+              ))}
+            </View>
+          </View>
+          <TextField
+            label="Expected status"
+            value={expectedStatus}
+            onChangeText={setExpectedStatus}
+            error={fieldErrors.expectedStatus}
+            hint="Optional. Leave blank to accept any 2xx or 3xx response."
+            keyboardType="number-pad"
+            inputMode="numeric"
+          />
+          <TextField
+            label="Max response time (ms)"
+            value={maxResponseTimeMs}
+            onChangeText={setMaxResponseTimeMs}
+            error={fieldErrors.maxResponseTimeMs}
+            hint="Optional. 2000 means the response must finish within 2 seconds."
+            keyboardType="number-pad"
+            inputMode="numeric"
+          />
+          <TextField
+            label="JSON field"
+            value={jsonField}
+            onChangeText={setJsonField}
+            error={fieldErrors.jsonField}
+            hint="Optional. Example: status or data.id."
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            label="Expected value"
+            value={expectedJsonValue}
+            onChangeText={setExpectedJsonValue}
+            error={fieldErrors.expectedJsonValue}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={200}
+          />
+          <TextField
+            label="Response contains"
+            value={expectedBody}
+            onChangeText={setExpectedBody}
+            error={fieldErrors.expectedBody}
+            hint="Optional. The raw response must contain this text."
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={200}
+          />
+          {httpMethod === 'GET' ? null : (
+            <TextField
+              label="Request body"
+              value={requestBody}
+              onChangeText={setRequestBody}
+              error={fieldErrors.requestBody}
+              hint="JSON sent with POST and PUT."
+              autoCapitalize="none"
+              autoCorrect={false}
+              multiline
+            />
+          )}
+          <TextField
+            label="Header name"
+            value={headerName}
+            onChangeText={setHeaderName}
+            error={fieldErrors.headerName}
+            hint={
+              savedHeaderNames.length > 0
+                ? `Saved headers stay hidden: ${savedHeaderNames.join(', ')}. Entering a header replaces them.`
+                : 'Optional. Authorization belongs in the bearer token field.'
+            }
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TextField
+            label="Header value"
+            value={headerValue}
+            onChangeText={setHeaderValue}
+            error={fieldErrors.headerValue}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {savedHeaderNames.length > 0 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text variant="body">Remove saved headers</Text>
+              <Switch
+                accessibilityLabel="Remove saved headers"
+                value={removeHeaders}
+                onValueChange={setRemoveHeaders}
+                disabled={saving}
+              />
+            </View>
+          ) : null}
+          <TextField
+            label="Bearer token"
+            value={bearerToken}
+            onChangeText={setBearerToken}
+            error={fieldErrors.bearerToken}
+            hint={
+              bearerTokenConfigured
+                ? 'A token is saved. Leave this blank to keep it.'
+                : 'Optional. Stored encrypted and never shown again.'
+            }
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {bearerTokenConfigured ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text variant="body">Remove saved token</Text>
+              <Switch
+                accessibilityLabel="Remove saved token"
+                value={removeBearerToken}
+                onValueChange={setRemoveBearerToken}
+                disabled={saving}
+              />
+            </View>
+          ) : null}
         </>
       ) : null}
       <View style={{ gap: theme.spacing.sm }}>

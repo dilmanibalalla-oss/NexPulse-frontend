@@ -12,6 +12,14 @@ const valid = {
   port: '',
   expectedStatus: '',
   expectedBody: '',
+  httpMethod: 'GET' as const,
+  maxResponseTimeMs: '',
+  jsonField: '',
+  expectedJsonValue: '',
+  requestBody: '',
+  bearerToken: '',
+  headerName: '',
+  headerValue: '',
 };
 
 describe('validateMonitor', () => {

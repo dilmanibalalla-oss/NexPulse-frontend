@@ -34,6 +34,15 @@ const write = {
   port: null,
   expectedStatus: null,
   expectedBody: null,
+  httpMethod: null,
+  maxResponseTimeMs: null,
+  jsonField: null,
+  expectedJsonValue: null,
+  requestBody: null,
+  bearerToken: null,
+  headers: null,
+  removeBearerToken: false,
+  removeHeaders: false,
 };
 
 function client(impl: Partial<ApiClient>): ApiClient {
@@ -76,6 +85,15 @@ describe('monitor API', () => {
           port: null,
           expectedStatus: null,
           expectedBody: null,
+          httpMethod: null,
+          maxResponseTimeMs: null,
+          jsonField: null,
+          expectedJsonValue: null,
+          requestBody: null,
+          bearerToken: '',
+          headers: [],
+          removeBearerToken: true,
+          removeHeaders: true,
         });
         return { status: 201, data: monitor };
       },

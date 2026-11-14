@@ -35,9 +35,24 @@ export function MonitorSummary({ monitor, now, onPress }: MonitorSummaryProps) {
         </View>
         <Text variant="muted">{monitor.url}</Text>
         <Text variant="caption">
+          {monitor.checkType === 'API' && monitor.httpMethod ? `${monitor.httpMethod} ` : ''}
           {monitor.checkType}
           {monitor.port == null ? '' : ` port ${monitor.port}`}
         </Text>
+        {monitor.checkType === 'API' ? (
+          <Text variant="caption">
+            {monitor.lastReachable == null
+              ? 'Reachability not checked yet'
+              : monitor.lastReachable
+                ? 'Endpoint reachable'
+                : 'Endpoint unreachable'}
+            {monitor.lastAssertionsPassed == null
+              ? ''
+              : monitor.lastAssertionsPassed
+                ? ', response matches'
+                : ', response does not match'}
+          </Text>
+        ) : null}
         <Text variant="caption">HTTP {formatStatusCode(monitor.lastStatusCode)}</Text>
         <Text variant="caption">Response time {formatResponseTime(monitor.lastResponseTime)}</Text>
         <Text variant="caption">DNS lookup {formatResponseTime(monitor.lastDnsLookupMs)}</Text>
